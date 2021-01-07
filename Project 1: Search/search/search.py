@@ -61,6 +61,12 @@ class SearchProblem:
         """
         util.raiseNotDefined()
 
+def find_path (current_node, parent):
+    current_parent, direction = parent[current_node]
+    if current_parent is None:
+        return []
+    else:
+        return find_path(current_parent, parent) + [direction]
 
 def tinyMazeSearch(problem):
     """
@@ -86,18 +92,99 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    from util import Stack
+    frontier = Stack()  # initialize a LIFO stack for the frontier
+    start_node = problem.getStartState()
+    frontier.push(start_node)  # add the start node to the frontier
+
+    parent = {start_node: (None, None)}  # use a dictionary to keep parent of every node
+
+    explored = set()  # use a set to keep the explored nodes
+
+    while True:
+        if frontier.isEmpty():
+            return None
+
+        current_node = frontier.pop()
+
+        explored.add(current_node)
+
+        if problem.isGoalState(current_node):
+            return find_path(current_node, parent)
+
+        successors = problem.getSuccessors(current_node)
+        for child, direction, cost in successors:
+            if child not in explored and child not in frontier.list:
+                frontier.push(child)
+                parent[child] = (current_node, direction)
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    from util import Queue
+    frontier = Queue()  # initialize a FIFO queue for the frontier
+    start_node = problem.getStartState()
+    frontier.push(start_node)  # add the start node to the frontier
+
+    parent = {start_node: (None, None)}  # use a dictionary to keep parent of every node
+
+    explored = set()  # use a set to keep the explored nodes
+
+    while True:
+        if frontier.isEmpty():
+            return None
+
+        current_node = frontier.pop()
+
+        explored.add(current_node)
+
+        if problem.isGoalState(current_node):
+            return find_path(current_node, parent)
+
+        successors = problem.getSuccessors(current_node)
+        for child, direction, cost in successors:
+            if child not in explored and child not in frontier.list:
+                frontier.push(child)
+                parent[child] = (current_node, direction)
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+    start_node = problem.getStartState()
+
+    frontier = PriorityQueue()  # initialize a priority queue for the frontier
+    frontier.push(start_node, 0)  # add the start node to the frontier
+
+    parent = {start_node: (None, None)}  # use a dictionary to keep parent of every node
+    g_path_costs = {}
+
+    explored = set()  # use a set to keep the explored nodes
+
+    g_path_costs[problem.getStartState()] = 0
+
+    while True:
+
+        if frontier.isEmpty():
+            return None
+
+        current_node = frontier.pop()
+
+        explored.add(current_node)
+
+        if problem.isGoalState(current_node):
+            return find_path(current_node, parent)
+
+        successors = problem.getSuccessors(current_node)
+        for child, direction, cost in successors:
+            g_cost = g_path_costs[current_node] + cost
+            if child not in explored:
+                if child not in g_path_costs or g_path_costs[child] > g_cost:
+                    frontier.update(child, g_cost)
+                    g_path_costs[child] = g_cost
+                    parent[child] = (current_node, direction)
 
 def nullHeuristic(state, problem=None):
     """
@@ -108,9 +195,42 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
+    from util import PriorityQueue
+
+    start_node = problem.getStartState()
+
+    frontier = PriorityQueue()  # initialize a priority queue for the frontier
+    frontier.push(start_node, 0)  # add the start node to the frontier
+
+    parent = {start_node: (None, None)}  # use a dictionary to keep parent of every node
+    g_path_costs = {}
+
+    explored = set()
+
+    g_path_costs[problem.getStartState()] = 0
+
+    while True:
+
+        if frontier.isEmpty():
+            return None
+
+        current_node = frontier.pop()
+
+        explored.add(current_node)
+
+        if problem.isGoalState(current_node):
+            return find_path(current_node, parent)
+
+        successors = problem.getSuccessors(current_node)
+        for child_node, direction, cost in successors:
+            g_cost = g_path_costs[current_node] + cost
+            if child_node not in explored:
+                if child_node not in g_path_costs or g_path_costs[child_node] > g_cost:
+                    astar_cost = g_cost + heuristic(child_node, problem)
+                    g_path_costs[child_node] = g_cost
+                    frontier.update(child_node, astar_cost)  # update also pushes a node in priority queue
+                    parent[child_node] = (current_node, direction)
 
 # Abbreviations
 bfs = breadthFirstSearch

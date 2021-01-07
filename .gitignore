@@ -130,3 +130,6 @@ deliverables
 
 # Pyre type checker
 .pyre/
+
+# IDE
+.idea
