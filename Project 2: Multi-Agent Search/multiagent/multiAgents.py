@@ -86,6 +86,8 @@ class ReflexAgent(Agent):
         for x in newGhostStates:
             distance = manhattanDistance(x.getPosition(), newPos)
             if distance<=1:
+                approach = MAXCONST
+            if distance<=2:
                 approach = 1
         ate=0
         if len(newFood) < len(current_food):
@@ -129,6 +131,47 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
+    MAXVALUE = 999999
+    MINVALUE = -999999
+
+    def max_value(self, gameState, current_depth):
+        actionlist = gameState.getLegalActions(0)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = self.MINVALUE
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, current_depth, 1)
+            if minvalue > v:
+                v = minvalue
+
+        return v
+
+
+    def min_value(self, gameState, current_depth, ghost_num):
+        actionlist = gameState.getLegalActions(ghost_num)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = self.MAXVALUE
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(ghost_num, action)
+
+            if ghost_num < gameState.getNumAgents()-1: #subtract 1 because of pacman
+                value = self.min_value(newGameState, current_depth, ghost_num+1)
+            else:
+                value = self.max_value(newGameState, current_depth+1)
+
+            v = min(v, value)
+
+        return v
+
+
     def getAction(self, gameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -152,8 +195,24 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        #we write again max_value algorithm because at the shallowest depth we want the action, not the value
+
+        actionlist = gameState.getLegalActions(0)
+        v = self.MINVALUE
+        state = actionlist[0]
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, 0, 1)
+            if minvalue > v:
+                v = minvalue
+                state = action
+
+        return state
+
+        # if the next agent is MIN: return min - value(state)
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
