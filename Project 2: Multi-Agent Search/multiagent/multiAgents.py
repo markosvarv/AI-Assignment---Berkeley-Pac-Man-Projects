@@ -87,8 +87,6 @@ class ReflexAgent(Agent):
             distance = manhattanDistance(x.getPosition(), newPos)
             if distance<=1:
                 approach = MAXCONST
-            if distance<=2:
-                approach = 1
         ate=0
         if len(newFood) < len(current_food):
             ate=1
@@ -302,12 +300,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
         for action in actionlist:
             newGameState = gameState.generateSuccessor(0, action)
-            minvalue = self.min_value(newGameState, current_depth, 1)
-            v = max(v, minvalue)
+            expvalue = self.exp_value(newGameState, current_depth, 1)
+            v = max(v, expvalue)
 
         return v
 
-    def min_value(self, gameState, current_depth, ghost_num):
+    def exp_value(self, gameState, current_depth, ghost_num):
         actionlist = gameState.getLegalActions(ghost_num)
 
         if current_depth == self.depth or not actionlist:
@@ -319,12 +317,11 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             newGameState = gameState.generateSuccessor(ghost_num, action)
 
             if ghost_num < gameState.getNumAgents() - 1:  # subtract 1 because of pacman
-                value = self.min_value(newGameState, current_depth, ghost_num + 1)
+                value = self.exp_value(newGameState, current_depth, ghost_num + 1)
             else:
                 value = self.max_value(newGameState, current_depth + 1)
 
-            # v = min(v, value)
-            p = 1/len(actionlist)
+            p = 1/(len(actionlist))
             v += p * value
 
         return v
@@ -342,9 +339,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
         for action in actionlist:
             newGameState = gameState.generateSuccessor(0, action)
-            minvalue = self.min_value(newGameState, 0, 1)
-            if minvalue > v:
-                v = minvalue
+            expvalue = self.exp_value(newGameState, 0, 1)
+            if expvalue > v:
+                v = expvalue
                 state = action
 
         return state
@@ -354,10 +351,28 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: rate states depending on the total number of food in the grid, the distance to the closest food and whether the pacman dies
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    MAXCONST = 9999999
+    current_food = currentGameState.getFood().asList()
+    currentPos = currentGameState.getPacmanPosition()
+
+    newFood = currentGameState.getFood().asList()
+    newGhostStates = currentGameState.getGhostStates()
+    new_food_min = 0 if len(newFood) == 0 else MAXCONST
+    for x in newFood:
+        distance = manhattanDistance(x, currentPos)
+        if distance < new_food_min:
+            new_food_min = distance
+
+    approach = 0
+    for x in newGhostStates:
+        distance = manhattanDistance(x.getPosition(), currentPos)
+        if distance <= 1:
+            approach = MAXCONST
+
+    return MAXCONST - len(current_food)*99 - new_food_min - random.randint(0, 1) - MAXCONST*approach #we subtract randomly a zero or one just to be sure that pacman won't get stuck
+
 
 # Abbreviation
 better = betterEvaluationFunction
