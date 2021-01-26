@@ -145,8 +145,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         for action in actionlist:
             newGameState = gameState.generateSuccessor(0, action)
             minvalue = self.min_value(newGameState, current_depth, 1)
-            if minvalue > v:
-                v = minvalue
+            v = max(v, minvalue)
 
         return v
 
@@ -219,12 +218,72 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    MAXVALUE = 999999
+    MINVALUE = -999999
+
+    def max_value(self, gameState, current_depth, a, b):
+        actionlist = gameState.getLegalActions(0)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = self.MINVALUE
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, current_depth, 1, a, b)
+            v = max(v, minvalue)
+
+            if v > b:
+                return v
+            a = max(a,v)
+
+        return v
+
+
+    def min_value(self, gameState, current_depth, ghost_num, a, b):
+        actionlist = gameState.getLegalActions(ghost_num)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = self.MAXVALUE
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(ghost_num, action)
+
+            if ghost_num < gameState.getNumAgents()-1: #subtract 1 because of pacman
+                value = self.min_value(newGameState, current_depth, ghost_num+1, a, b)
+            else:
+                value = self.max_value(newGameState, current_depth+1, a, b)
+            v = min(v, value)
+
+            if v < a:
+                return v
+            b = min(b,v)
+
+        return v
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actionlist = gameState.getLegalActions(0)
+        v = self.MINVALUE
+        state = actionlist[0]
+
+        a=self.MINVALUE
+        b=self.MAXVALUE
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, 0, 1, a, b)
+            if minvalue > v:
+                v = minvalue
+                state = action
+            if v > b:
+                return v
+            a = max(a,v)
+        return state
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
