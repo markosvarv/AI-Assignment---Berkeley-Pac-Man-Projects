@@ -289,6 +289,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+    MINVALUE = -999999
+
+
+    def max_value(self, gameState, current_depth):
+        actionlist = gameState.getLegalActions(0)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = self.MINVALUE
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, current_depth, 1)
+            v = max(v, minvalue)
+
+        return v
+
+    def min_value(self, gameState, current_depth, ghost_num):
+        actionlist = gameState.getLegalActions(ghost_num)
+
+        if current_depth == self.depth or not actionlist:
+            return self.evaluationFunction(gameState)
+
+        v = 0
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(ghost_num, action)
+
+            if ghost_num < gameState.getNumAgents() - 1:  # subtract 1 because of pacman
+                value = self.min_value(newGameState, current_depth, ghost_num + 1)
+            else:
+                value = self.max_value(newGameState, current_depth + 1)
+
+            # v = min(v, value)
+            p = 1/len(actionlist)
+            v += p * value
+
+        return v
 
     def getAction(self, gameState):
         """
@@ -297,8 +336,18 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actionlist = gameState.getLegalActions(0)
+        v = self.MINVALUE
+        state = actionlist[0]
+
+        for action in actionlist:
+            newGameState = gameState.generateSuccessor(0, action)
+            minvalue = self.min_value(newGameState, 0, 1)
+            if minvalue > v:
+                v = minvalue
+                state = action
+
+        return state
 
 def betterEvaluationFunction(currentGameState):
     """
